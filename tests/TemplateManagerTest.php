@@ -11,6 +11,7 @@ use App\Entity\Template;
 use App\Repository\InstructorRepository;
 use App\Repository\LessonRepository;
 use App\Repository\MeetingPointRepository;
+use App\Service\LessonRenderer;
 use App\TemplateManager;
 use PHPUnit\Framework\TestCase;
 
@@ -23,6 +24,8 @@ class TemplateManagerTest extends TestCase
     private ApplicationContext $applicationContext;
 
     private LessonRepository $lessonRepository;
+
+    private LessonRenderer $lessonRenderer;
 
     /**
      * Init the mocks
@@ -40,6 +43,8 @@ class TemplateManagerTest extends TestCase
         $this->applicationContext->setCurrentUser(new Learner(1, "toto", "bob", "toto@bob.to"));
 
         $this->lessonRepository = new LessonRepository();
+
+        $this->lessonRenderer = new LessonRenderer();
     }
 
     /**
@@ -81,7 +86,8 @@ L'équipe Ornikar
             $this->applicationContext,
             $this->lessonRepository,
             $this->meetingPointRepository,
-            $this->instructorRepository
+            $this->instructorRepository,
+            $this->lessonRenderer
         );
 
         $message = $templateManager->getTemplateComputed(

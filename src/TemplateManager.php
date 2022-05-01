@@ -10,6 +10,7 @@ use App\Entity\Template;
 use App\Repository\InstructorRepository;
 use App\Repository\LessonRepository;
 use App\Repository\MeetingPointRepository;
+use App\Service\LessonRenderer;
 
 class TemplateManager
 {
@@ -18,6 +19,7 @@ class TemplateManager
         private readonly LessonRepository $lessonRepository,
         private readonly MeetingPointRepository $meetingPointRepository,
         private readonly InstructorRepository $instructorRepository,
+        private readonly LessonRenderer $lessonRenderer,
     ) {}
 
     public function getTemplateComputed(Template $tpl, array $data)
@@ -53,14 +55,14 @@ class TemplateManager
                 if ($containsSummaryHtml !== false) {
                     $text = str_replace(
                         '[lesson:summary_html]',
-                        Lesson::renderHtml($_lessonFromRepository),
+                        $this->lessonRenderer->renderHtml($_lessonFromRepository),
                         $text
                     );
                 }
                 if ($containsSummary !== false) {
                     $text = str_replace(
                         '[lesson:summary]',
-                        Lesson::renderText($_lessonFromRepository),
+                        $this->lessonRenderer->renderText($_lessonFromRepository),
                         $text
                     );
                 }
