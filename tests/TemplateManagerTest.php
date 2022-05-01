@@ -2,7 +2,6 @@
 
 namespace Test;
 
-
 use App\Context\ApplicationContext;
 use App\Entity\Instructor;
 use App\Entity\Learner;
@@ -24,7 +23,6 @@ class TemplateManagerTest extends \PHPUnit_Framework_TestCase
         InstructorRepository::getInstance()->save(new Instructor(1, "jean", "rock"));
         MeetingPointRepository::getInstance()->save(new MeetingPoint(1, "http://lambda.to", "paris 5eme"));
         ApplicationContext::getInstance()->setCurrentUser(new Learner(1, "toto", "bob", "toto@bob.to"));
-
     }
 
     /**
@@ -45,7 +43,7 @@ class TemplateManagerTest extends \PHPUnit_Framework_TestCase
         $start_at = new \DateTime("2021-01-01 12:00:00");
         $end_at = $start_at->add(new \DateInterval('PT1H'));
 
-        $lesson = new Lesson(1, 1 , 1, $start_at, $end_at);
+        $lesson = new Lesson(1, 1, 1, $start_at, $end_at);
         LessonRepository::getInstance()->save($lesson);
 
         $template = new Template(
@@ -60,7 +58,8 @@ Voici votre point de rendez-vous: [lesson:meeting_point].
 Bien cordialement,
 
 L'équipe Ornikar
-");
+"
+        );
         $templateManager = new TemplateManager();
 
         $message = $templateManager->getTemplateComputed(

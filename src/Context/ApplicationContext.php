@@ -16,7 +16,6 @@ class ApplicationContext
 
     protected function __construct()
     {
-
     }
 
 

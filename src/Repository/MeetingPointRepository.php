@@ -1,6 +1,6 @@
 <?php
-namespace App\Repository;
 
+namespace App\Repository;
 
 use App\Entity\MeetingPoint;
 use App\Helper\SingletonTrait;
