@@ -20,14 +20,11 @@ class TemplateManager
         private readonly MeetingPointRepository $meetingPointRepository,
         private readonly InstructorRepository $instructorRepository,
         private readonly LessonRenderer $lessonRenderer,
-    ) {}
+    ) {
+    }
 
     public function getTemplateComputed(Template $tpl, array $data)
     {
-        if (!$tpl) {
-            throw new \RuntimeException('no tpl given');
-        }
-
         $replaced = clone($tpl);
         $replaced->subject = $this->computeText($replaced->subject, $data);
         $replaced->content = $this->computeText($replaced->content, $data);
@@ -41,39 +38,37 @@ class TemplateManager
 
         if ($lesson) {
             $_lessonFromRepository = $this->lessonRepository->getById($lesson->id);
-            $usefulObject = $this->meetingPointRepository->getById($lesson->meetingPointId);
-            $instructorOfLesson = $this->instructorRepository->getById($lesson->instructorId);
+            $meetingPoint = $this->meetingPointRepository->getById($lesson->meetingPointId);
+            $instructor = $this->instructorRepository->getById($lesson->instructorId);
 
             if (strpos($text, '[lesson:instructor_link]') !== false) {
-                $text = str_replace('[instructor_link]', 'instructors/' . $instructorOfLesson->id .'-'.urlencode($instructorOfLesson->firstname), $text);
+                $text = str_replace('[instructor_link]', 'instructors/' . $instructor->id .'-'.urlencode($instructor->firstname), $text);
             }
 
             $containsSummaryHtml = strpos($text, '[lesson:summary_html]');
             $containsSummary     = strpos($text, '[lesson:summary]');
 
-            if ($containsSummaryHtml !== false || $containsSummary !== false) {
-                if ($containsSummaryHtml !== false) {
-                    $text = str_replace(
-                        '[lesson:summary_html]',
-                        $this->lessonRenderer->renderHtml($_lessonFromRepository),
-                        $text
-                    );
-                }
-                if ($containsSummary !== false) {
-                    $text = str_replace(
-                        '[lesson:summary]',
-                        $this->lessonRenderer->renderText($_lessonFromRepository),
-                        $text
-                    );
-                }
+            if ($containsSummaryHtml !== false) {
+                $text = str_replace(
+                    '[lesson:summary_html]',
+                    $this->lessonRenderer->renderHtml($_lessonFromRepository),
+                    $text
+                );
+            }
+            if ($containsSummary !== false) {
+                $text = str_replace(
+                    '[lesson:summary]',
+                    $this->lessonRenderer->renderText($_lessonFromRepository),
+                    $text
+                );
             }
 
-            (strpos($text, '[lesson:instructor_name]') !== false) and $text = str_replace('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
+            $text = str_replace('[lesson:instructor_name]', $instructor->firstname, $text);
         }
 
         if ($lesson->meetingPointId) {
             if (strpos($text, '[lesson:meeting_point]') !== false) {
-                $text = str_replace('[lesson:meeting_point]', $usefulObject->name, $text);
+                $text = str_replace('[lesson:meeting_point]', $meetingPoint->name, $text);
             }
         }
 

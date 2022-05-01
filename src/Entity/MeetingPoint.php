@@ -8,5 +8,6 @@ class MeetingPoint
         public int $id,
         public string $url,
         public string $name
-    ) {}
+    ) {
+    }
 }

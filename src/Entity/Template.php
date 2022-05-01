@@ -8,5 +8,6 @@ class Template
         public int $id,
         public string $subject,
         public string $content
-    ) {}
+    ) {
+    }
 }

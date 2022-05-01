@@ -8,5 +8,6 @@ class Instructor
         public int $id,
         public string $firstname,
         public string $lastname
-    ) {}
+    ) {
+    }
 }

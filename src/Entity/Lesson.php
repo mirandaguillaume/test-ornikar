@@ -10,5 +10,6 @@ class Lesson
         public int $instructorId,
         public \DateTime $start_time,
         public \DateTime  $end_time
-    ) {}
+    ) {
+    }
 }

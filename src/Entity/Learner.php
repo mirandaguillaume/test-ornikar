@@ -9,5 +9,6 @@ class Learner
         public string $firstname,
         public string $lastname,
         public string $email
-    ) {}
+    ) {
+    }
 }
