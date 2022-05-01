@@ -38,46 +38,50 @@ class TemplateManager
 
     private function computeText($text, Query $query)
     {
+        $toReplaceArray = [
+            '[user:first_name]',
+            '[instructor_link]'
+        ];
+
+        $replacementArray = [
+            ucfirst(strtolower($query->learner->firstname)),
+            $query->instructor ? 'instructors/' . $query->instructor->id .'-'.urlencode($query->instructor->firstname) : '',
+        ];
+
         if ($query->lesson) {
             $meetingPoint = $this->meetingPointRepository->getById($query->lesson->meetingPointId);
             $instructor = $this->instructorRepository->getById($query->lesson->instructorId);
 
-            if (strpos($text, '[lesson:instructor_link]') !== false) {
-                $text = str_replace('[instructor_link]', 'instructors/' . $instructor->id .'-'.urlencode($instructor->firstname), $text);
-            }
-
-            $text = str_replace(
+            $toReplaceArray = array_merge($toReplaceArray, [
                 '[lesson:summary_html]',
-                $this->lessonRenderer->renderHtml($query->lesson),
-                $text
-            );
-            $text = str_replace(
                 '[lesson:summary]',
+                '[lesson:instructor_name]',
+                '[lesson:meeting_point]',
+                '[lesson:start_date]',
+                '[lesson:start_time]',
+                '[lesson:end_time]',
+            ]);
+
+            $replacementArray = array_merge($replacementArray, [
+                $this->lessonRenderer->renderHtml($query->lesson),
                 $this->lessonRenderer->renderText($query->lesson),
-                $text
-            );
+                $instructor->firstname,
+                $meetingPoint->name,
+                $query->lesson->start_time->format('d/m/Y'),
+                $query->lesson->start_time->format('H:i'),
+                $query->lesson->end_time->format('H:i'),
+            ]);
 
-            $text = str_replace('[lesson:instructor_name]', $instructor->firstname, $text);
-
-            $text = str_replace('[lesson:meeting_point]', $meetingPoint->name, $text);
+            if (strpos($text, '[lesson:instructor_link]') !== false) {
+                $toReplaceArray[] = '[instructor_link]';
+                $replacementArray[] = 'instructors/' . $instructor->id .'-'.urlencode($instructor->firstname);
+            }
         }
 
-        $text = str_replace('[lesson:start_date]', $query->lesson->start_time->format('d/m/Y'), $text);
-
-        $text = str_replace('[lesson:start_time]', $query->lesson->start_time->format('H:i'), $text);
-
-        $text = str_replace('[lesson:end_time]', $query->lesson->end_time->format('H:i'), $text);
-
-        $instructorReplacement = '';
-
-        if ($query->instructor) {
-            $instructorReplacement = 'instructors/' . $query->instructor->id .'-'.urlencode($query->instructor->firstname);
-        }
-
-        $text = str_replace('[instructor_link]', $instructorReplacement, $text);
-
-        $text = str_replace('[user:first_name]', ucfirst(strtolower($query->learner->firstname)), $text);
-
-        return $text;
+        return str_replace(
+            $toReplaceArray,
+            $replacementArray,
+            $text
+        );;
     }
 }

@@ -8,5 +8,5 @@ class Query
 
     public ?Instructor $instructor = null;
 
-    public ?Learner $learner = null;
+    public Learner $learner;
 }

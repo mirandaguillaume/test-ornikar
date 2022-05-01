@@ -3,6 +3,7 @@
 namespace Test;
 
 use App\Context\ApplicationContext;
+use App\Entity\Instructor;
 use App\Entity\Learner;
 use App\Entity\Lesson;
 use App\Service\QueryService;
@@ -32,17 +33,61 @@ class QueryServiceTest extends TestCase
         ;
     }
 
-    public function testCreateQueryWithLessonOK()
+    public function testCreateQueryWithLesson()
     {
-        $lesson = $this->prophesize(Lesson::class);
+        $expectedLesson = new Lesson(
+            1,
+            2,
+            3,
+            new \DateTime(),
+            new \DateTime(),
+        );
 
         $data = [
-            'lesson' => $lesson->reveal(),
+            'lesson' => $expectedLesson,
         ];
 
         $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
 
-        $this->assertEquals($data['lesson'], $result->lesson);
+        $this->assertEquals($expectedLesson, $result->lesson);
+    }
+
+    public function testCreateQueryWithInstructor()
+    {
+        $expectedInstructor = new Instructor(
+            3,
+            'expectedInstructorFirstname',
+            'expectedInstructorLastname'
+        );
+
+        $data = [
+            'instructor' => $expectedInstructor,
+        ];
+
+        $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
+
+        $this->assertEquals($expectedInstructor, $result->instructor);
+    }
+
+    public function testCreateQueryWithLearner()
+    {
+        $expectedLearner = new Learner(
+            2,
+            'expectedFirstname',
+            'expectedLastname',
+            'expectedEmail'
+        );
+
+        $data = [
+            'user' => $expectedLearner,
+        ];
+
+        $this->applicationContext->getCurrentUser()
+            ->shouldNotBeCalled();
+
+        $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
+
+        $this->assertEquals($expectedLearner, $result->learner);
     }
 
     public function testCreateQueryNoLesson()
