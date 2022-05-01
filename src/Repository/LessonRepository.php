@@ -8,6 +8,8 @@ use App\Helper\SingletonTrait;
 // DO NOT MODIFY THIS CLASS
 class LessonRepository implements Repository
 {
+    use SingletonTrait;
+
     private $siteId;
     private $instructorId;
     private $date;
