@@ -29,21 +29,33 @@ class TemplateManager
     {
         $query = $this->queryService->createQuery($data);
 
+        [$toBeReplaced, $replacements] = $this->getBasicReplacements($query);
+
         $replaced = clone($tpl);
-        $replaced->subject = $this->computeText($replaced->subject, $query);
-        $replaced->content = $this->computeText($replaced->content, $query);
+
+        $replaced->subject = str_replace(
+            $toBeReplaced,
+            $replacements,
+            $replaced->subject
+        );
+
+        $replaced->content = str_replace(
+            $toBeReplaced,
+            $replacements,
+            $replaced->content
+        );
 
         return $replaced;
     }
 
-    private function computeText($text, Query $query)
+    private function getBasicReplacements(Query $query): array
     {
-        $toReplaceArray = [
+        $toBeReplaced = [
             '[user:first_name]',
             '[instructor_link]'
         ];
 
-        $replacementArray = [
+        $replacements = [
             ucfirst(strtolower($query->learner->firstname)),
             $query->instructor ? 'instructors/' . $query->instructor->id .'-'.urlencode($query->instructor->firstname) : '',
         ];
@@ -52,7 +64,7 @@ class TemplateManager
             $meetingPoint = $this->meetingPointRepository->getById($query->lesson->meetingPointId);
             $instructor = $this->instructorRepository->getById($query->lesson->instructorId);
 
-            $toReplaceArray = array_merge($toReplaceArray, [
+            $toBeReplaced = array_merge($toBeReplaced, [
                 '[lesson:summary_html]',
                 '[lesson:summary]',
                 '[lesson:instructor_name]',
@@ -62,7 +74,7 @@ class TemplateManager
                 '[lesson:end_time]',
             ]);
 
-            $replacementArray = array_merge($replacementArray, [
+            $replacements = array_merge($replacements, [
                 $this->lessonRenderer->renderHtml($query->lesson),
                 $this->lessonRenderer->renderText($query->lesson),
                 $instructor->firstname,
@@ -71,17 +83,8 @@ class TemplateManager
                 $query->lesson->start_time->format('H:i'),
                 $query->lesson->end_time->format('H:i'),
             ]);
-
-            if (strpos($text, '[lesson:instructor_link]') !== false) {
-                $toReplaceArray[] = '[instructor_link]';
-                $replacementArray[] = 'instructors/' . $instructor->id .'-'.urlencode($instructor->firstname);
-            }
         }
 
-        return str_replace(
-            $toReplaceArray,
-            $replacementArray,
-            $text
-        );;
+        return [$toBeReplaced, $replacements];
     }
 }

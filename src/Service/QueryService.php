@@ -12,7 +12,8 @@ class QueryService
 {
     public function __construct(
         private readonly ApplicationContext $applicationContext
-    ) {}
+    ) {
+    }
 
     public function createQuery(array $data): Query
     {
