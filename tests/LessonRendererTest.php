@@ -5,9 +5,12 @@ namespace Test;
 use App\Entity\Lesson;
 use App\Service\LessonRenderer;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 class LessonRendererTest extends TestCase
 {
+    use ProphecyTrait;
+
     public function testRenderHtml()
     {
         $expectedLesson = $this->createLesson();

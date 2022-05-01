@@ -7,6 +7,7 @@ use App\Entity\Instructor;
 use App\Entity\Learner;
 use App\Entity\Lesson;
 use App\Entity\MeetingPoint;
+use App\Entity\Query;
 use App\Entity\Template;
 use App\Repository\InstructorRepository;
 use App\Repository\LessonRepository;
@@ -15,41 +16,25 @@ use App\Service\LessonRenderer;
 use App\Service\QueryService;
 use App\TemplateManager;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
 
 class TemplateManagerTest extends TestCase
 {
-    private InstructorRepository $instructorRepository;
+    use ProphecyTrait;
 
-    private MeetingPointRepository $meetingPointRepository;
+    private ObjectProphecy $lessonRenderer;
 
-    private ApplicationContext $applicationContext;
-
-    private LessonRenderer $lessonRenderer;
+    private ObjectProphecy $queryService;
 
     /**
      * Init the mocks
      */
     public function setUp(): void
     {
-        $this->instructorRepository = new InstructorRepository();
-        $this->instructorRepository->save(new Instructor(1, "jean", "rock"));
-
-        $this->meetingPointRepository = new MeetingPointRepository();
-        $this->meetingPointRepository->save(new MeetingPoint(1, "http://lambda.to", "paris 5eme"));
-
-        $this->applicationContext = new ApplicationContext();
-        $this->applicationContext->setCurrentUser(new Learner(1, "toto", "bob", "toto@bob.to"));
-
-        $this->lessonRenderer = new LessonRenderer();
-
-        $this->queryService = new QueryService($this->applicationContext, $this->meetingPointRepository, $this->instructorRepository);
-    }
-
-    /**
-     * Closes the mocks
-     */
-    public function tearDown(): void
-    {
+        $this->lessonRenderer = $this->prophesize(LessonRenderer::class);
+        $this->queryService = $this->prophesize(QueryService::class);
     }
 
     /**
@@ -57,13 +42,39 @@ class TemplateManagerTest extends TestCase
      */
     public function test()
     {
-        $expectedInstructor = $this->instructorRepository->getById(1);
-        $expectedMeetingPoint = $this->meetingPointRepository->getById(1);
-        $expectedUser = $this->applicationContext->getCurrentUser();
+        $expectedInstructor = new Instructor(1, "jean", "rock");
+        $expectedMeetingPoint = new MeetingPoint(1, "http://lambda.to", "paris 5eme");
+        $expectedLearner = new Learner(1, "toto", "bob", "toto@bob.to");
+
         $start_at = new \DateTime("2021-01-01 12:00:00");
         $end_at = $start_at->add(new \DateInterval('PT1H'));
 
-        $lesson = new Lesson(1, 1, 1, $start_at, $end_at);
+        $lesson = new Lesson(1, $expectedMeetingPoint->id, $expectedInstructor->id, $start_at, $end_at);
+
+        $expectedQuery = new Query();
+        $expectedQuery->lesson = $lesson;
+        $expectedQuery->lessonInstructor = $expectedInstructor;
+        $expectedQuery->learner = $expectedLearner;
+        $expectedQuery->lessonMeetingPoint = $expectedMeetingPoint;
+
+        $this->queryService->createQuery([
+            'lesson' => $lesson
+            ])
+            ->shouldBeCalledOnce()
+            ->willReturn($expectedQuery)
+        ;
+
+        $this->lessonRenderer
+            ->renderHtml(Argument::type(Lesson::class))
+            ->shouldBeCalledOnce()
+            ->willReturn('renderedHtml')
+        ;
+
+        $this->lessonRenderer
+            ->renderText(Argument::type(Lesson::class))
+            ->shouldBeCalledOnce()
+            ->willReturn('renderedText')
+        ;
 
         $template = new Template(
             1,
@@ -79,9 +90,10 @@ Bien cordialement,
 L'équipe Ornikar
 "
         );
+
         $templateManager = new TemplateManager(
-            $this->lessonRenderer,
-            $this->queryService,
+            $this->lessonRenderer->reveal(),
+            $this->queryService->reveal(),
         );
 
         $message = $templateManager->getTemplateComputed(
@@ -91,12 +103,12 @@ L'équipe Ornikar
             ]
         );
 
-        $this->assertEquals('Votre leçon de conduite avec ' . $expectedInstructor->firstname, $message->subject);
+        $this->assertEquals("Votre leçon de conduite avec {$expectedInstructor->firstname}", $message->subject);
         $this->assertEquals("
 Bonjour Toto,
 
-La reservation du " . $start_at->format('d/m/Y') . " de " . $start_at->format('H:i') . " à " . $end_at->format('H:i') . " avec " . $expectedInstructor->firstname . " a bien été prise en compte!
-Voici votre point de rendez-vous: " . $expectedMeetingPoint->name . ".
+La reservation du {$start_at->format('d/m/Y')} de {$start_at->format('H:i')} à {$end_at->format('H:i')} avec {$expectedInstructor->firstname} a bien été prise en compte!
+Voici votre point de rendez-vous: {$expectedMeetingPoint->name}.
 
 Bien cordialement,
 

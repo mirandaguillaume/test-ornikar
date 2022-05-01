@@ -11,10 +11,13 @@ use App\Repository\InstructorRepository;
 use App\Repository\MeetingPointRepository;
 use App\Service\QueryService;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 
 class QueryServiceTest extends TestCase
 {
+    use ProphecyTrait;
+
     private ObjectProphecy $applicationContext;
 
     private ObjectProphecy $instructorRepository;
