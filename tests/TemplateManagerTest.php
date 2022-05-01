@@ -12,23 +12,40 @@ use App\Repository\InstructorRepository;
 use App\Repository\LessonRepository;
 use App\Repository\MeetingPointRepository;
 use App\TemplateManager;
+use PHPUnit\Framework\TestCase;
 
-class TemplateManagerTest extends \PHPUnit_Framework_TestCase
+class TemplateManagerTest extends TestCase
 {
+    private InstructorRepository $instructorRepository;
+
+    private MeetingPointRepository $meetingPointRepository;
+
+    private ApplicationContext $applicationContext;
+
+    private LessonRepository $lessonRepository;
+
     /**
      * Init the mocks
      */
-    public function setUp()
+    public function setUp(): void
     {
-        InstructorRepository::getInstance()->save(new Instructor(1, "jean", "rock"));
-        MeetingPointRepository::getInstance()->save(new MeetingPoint(1, "http://lambda.to", "paris 5eme"));
-        ApplicationContext::getInstance()->setCurrentUser(new Learner(1, "toto", "bob", "toto@bob.to"));
+        $this->instructorRepository = new InstructorRepository();
+        $this->instructorRepository->save(new Instructor(1, "jean", "rock"));
+
+
+        $this->meetingPointRepository = new MeetingPointRepository();
+        $this->meetingPointRepository->save(new MeetingPoint(1, "http://lambda.to", "paris 5eme"));
+
+        $this->applicationContext = new ApplicationContext();
+        $this->applicationContext->setCurrentUser(new Learner(1, "toto", "bob", "toto@bob.to"));
+
+        $this->lessonRepository = new LessonRepository();
     }
 
     /**
      * Closes the mocks
      */
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 
@@ -37,14 +54,14 @@ class TemplateManagerTest extends \PHPUnit_Framework_TestCase
      */
     public function test()
     {
-        $expectedInstructor = InstructorRepository::getInstance()->getById(1);
-        $expectedMeetingPoint = MeetingPointRepository::getInstance()->getById(1);
-        $expectedUser = ApplicationContext::getInstance()->getCurrentUser();
+        $expectedInstructor = $this->instructorRepository->getById(1);
+        $expectedMeetingPoint = $this->meetingPointRepository->getById(1);
+        $expectedUser = $this->applicationContext->getCurrentUser();
         $start_at = new \DateTime("2021-01-01 12:00:00");
         $end_at = $start_at->add(new \DateInterval('PT1H'));
 
         $lesson = new Lesson(1, 1, 1, $start_at, $end_at);
-        LessonRepository::getInstance()->save($lesson);
+        $this->lessonRepository->save($lesson);
 
         $template = new Template(
             1,
@@ -60,7 +77,12 @@ Bien cordialement,
 L'équipe Ornikar
 "
         );
-        $templateManager = new TemplateManager();
+        $templateManager = new TemplateManager(
+            $this->applicationContext,
+            $this->lessonRepository,
+            $this->meetingPointRepository,
+            $this->instructorRepository
+        );
 
         $message = $templateManager->getTemplateComputed(
             $template,

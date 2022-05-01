@@ -7,17 +7,10 @@ use App\Helper\SingletonTrait;
 
 class ApplicationContext
 {
-    use SingletonTrait;
-
     /**
      * @var Learner
      */
     private Learner $currentUser;
-
-    protected function __construct()
-    {
-    }
-
 
     /**
      * @return Learner

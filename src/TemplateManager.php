@@ -13,6 +13,13 @@ use App\Repository\MeetingPointRepository;
 
 class TemplateManager
 {
+    public function __construct(
+        private readonly ApplicationContext $applicationContext,
+        private readonly LessonRepository $lessonRepository,
+        private readonly MeetingPointRepository $meetingPointRepository,
+        private readonly InstructorRepository $instructorRepository,
+    ) {}
+
     public function getTemplateComputed(Template $tpl, array $data)
     {
         if (!$tpl) {
@@ -28,14 +35,12 @@ class TemplateManager
 
     private function computeText($text, array $data)
     {
-        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
-
         $lesson = (isset($data['lesson']) and $data['lesson'] instanceof Lesson) ? $data['lesson'] : null;
 
         if ($lesson) {
-            $_lessonFromRepository = LessonRepository::getInstance()->getById($lesson->id);
-            $usefulObject = MeetingPointRepository::getInstance()->getById($lesson->meetingPointId);
-            $instructorOfLesson = InstructorRepository::getInstance()->getById($lesson->instructorId);
+            $_lessonFromRepository = $this->lessonRepository->getById($lesson->id);
+            $usefulObject = $this->meetingPointRepository->getById($lesson->meetingPointId);
+            $instructorOfLesson = $this->instructorRepository->getById($lesson->instructorId);
 
             if (strpos($text, '[lesson:instructor_link]') !== false) {
                 $text = str_replace('[instructor_link]', 'instructors/' . $instructorOfLesson->id .'-'.urlencode($instructorOfLesson->firstname), $text);
@@ -93,7 +98,7 @@ class TemplateManager
          * USER
          * [user:*]
          */
-        $_user  = (isset($data['user'])  and ($data['user']  instanceof Learner)) ? $data['user'] : $APPLICATION_CONTEXT->getCurrentUser();
+        $_user  = (isset($data['user'])  and ($data['user']  instanceof Learner)) ? $data['user'] : $this->applicationContext->getCurrentUser();
         if ($_user) {
             (strpos($text, '[user:first_name]') !== false) and $text = str_replace('[user:first_name]', ucfirst(strtolower($_user->firstname)), $text);
         }
