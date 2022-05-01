@@ -6,6 +6,9 @@ use App\Context\ApplicationContext;
 use App\Entity\Instructor;
 use App\Entity\Learner;
 use App\Entity\Lesson;
+use App\Entity\MeetingPoint;
+use App\Repository\InstructorRepository;
+use App\Repository\MeetingPointRepository;
 use App\Service\QueryService;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -14,7 +17,13 @@ class QueryServiceTest extends TestCase
 {
     private ObjectProphecy $applicationContext;
 
+    private ObjectProphecy $instructorRepository;
+
+    private ObjectProphecy $meetingPointRepository;
+
     private Learner $contextLearner;
+
+    private QueryService $queryService;
 
     public function setUp(): void
     {
@@ -31,14 +40,35 @@ class QueryServiceTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn($this->contextLearner)
         ;
+
+        $this->instructorRepository = $this->prophesize(InstructorRepository::class);
+        $this->meetingPointRepository = $this->prophesize(MeetingPointRepository::class);
+
+        $this->queryService = new QueryService(
+            $this->applicationContext->reveal(),
+            $this->meetingPointRepository->reveal(),
+            $this->instructorRepository->reveal(),
+        );
     }
 
     public function testCreateQueryWithLesson()
     {
+        $expectedInstructor = new Instructor(
+            3,
+            'expectedInstructor',
+            'expectedLastname',
+        );
+
+        $expectedMeetingPoint = new MeetingPoint(
+            2,
+            'expectedUrl',
+            'expectedName',
+        );
+
         $expectedLesson = new Lesson(
             1,
-            2,
-            3,
+            $expectedMeetingPoint->id,
+            $expectedInstructor->id,
             new \DateTime(),
             new \DateTime(),
         );
@@ -47,9 +77,23 @@ class QueryServiceTest extends TestCase
             'lesson' => $expectedLesson,
         ];
 
-        $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
+        $this->instructorRepository
+            ->getById($expectedInstructor->id)
+            ->shouldBeCalledOnce()
+            ->willReturn($expectedInstructor)
+            ;
+
+        $this->meetingPointRepository
+            ->getById($expectedMeetingPoint->id)
+            ->shouldBeCalledOnce()
+            ->willReturn($expectedMeetingPoint)
+        ;
+
+        $result = $this->queryService->createQuery($data);
 
         $this->assertEquals($expectedLesson, $result->lesson);
+        $this->assertEquals($expectedInstructor, $result->lessonInstructor);
+        $this->assertEquals($expectedMeetingPoint, $result->lessonMeetingPoint);
     }
 
     public function testCreateQueryWithInstructor()
@@ -64,7 +108,7 @@ class QueryServiceTest extends TestCase
             'instructor' => $expectedInstructor,
         ];
 
-        $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
+        $result = $this->queryService->createQuery($data);
 
         $this->assertEquals($expectedInstructor, $result->instructor);
     }
@@ -85,7 +129,7 @@ class QueryServiceTest extends TestCase
         $this->applicationContext->getCurrentUser()
             ->shouldNotBeCalled();
 
-        $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
+        $result = $this->queryService->createQuery($data);
 
         $this->assertEquals($expectedLearner, $result->learner);
     }
@@ -96,7 +140,7 @@ class QueryServiceTest extends TestCase
 
         $data = [];
 
-        $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
+        $result = $this->queryService->createQuery($data);
 
         $this->assertNull($result->lesson);
     }
@@ -107,7 +151,7 @@ class QueryServiceTest extends TestCase
 
         $data = [];
 
-        $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
+        $result = $this->queryService->createQuery($data);
 
         $this->assertNull($result->instructor);
     }
@@ -118,7 +162,7 @@ class QueryServiceTest extends TestCase
 
         $data = [];
 
-        $result = (new QueryService($this->applicationContext->reveal()))->createQuery($data);
+        $result = $this->queryService->createQuery($data);
 
         $this->assertEquals($this->contextLearner, $result->learner);
     }

@@ -24,8 +24,6 @@ class TemplateManagerTest extends TestCase
 
     private ApplicationContext $applicationContext;
 
-    private LessonRepository $lessonRepository;
-
     private LessonRenderer $lessonRenderer;
 
     /**
@@ -42,11 +40,9 @@ class TemplateManagerTest extends TestCase
         $this->applicationContext = new ApplicationContext();
         $this->applicationContext->setCurrentUser(new Learner(1, "toto", "bob", "toto@bob.to"));
 
-        $this->lessonRepository = new LessonRepository();
-
         $this->lessonRenderer = new LessonRenderer();
 
-        $this->queryService = new QueryService($this->applicationContext);
+        $this->queryService = new QueryService($this->applicationContext, $this->meetingPointRepository, $this->instructorRepository);
     }
 
     /**
@@ -68,7 +64,6 @@ class TemplateManagerTest extends TestCase
         $end_at = $start_at->add(new \DateInterval('PT1H'));
 
         $lesson = new Lesson(1, 1, 1, $start_at, $end_at);
-        $this->lessonRepository->save($lesson);
 
         $template = new Template(
             1,
@@ -85,9 +80,6 @@ L'équipe Ornikar
 "
         );
         $templateManager = new TemplateManager(
-            $this->lessonRepository,
-            $this->meetingPointRepository,
-            $this->instructorRepository,
             $this->lessonRenderer,
             $this->queryService,
         );

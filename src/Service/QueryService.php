@@ -7,11 +7,15 @@ use App\Entity\Instructor;
 use App\Entity\Learner;
 use App\Entity\Lesson;
 use App\Entity\Query;
+use App\Repository\InstructorRepository;
+use App\Repository\MeetingPointRepository;
 
 class QueryService
 {
     public function __construct(
-        private readonly ApplicationContext $applicationContext
+        private readonly ApplicationContext $applicationContext,
+        private readonly MeetingPointRepository $meetingPointRepository,
+        private readonly InstructorRepository $instructorRepository,
     ) {
     }
 
@@ -21,6 +25,8 @@ class QueryService
 
         if (isset($data['lesson']) && $data['lesson'] instanceof Lesson) {
             $query->lesson = $data['lesson'];
+            $query->lessonInstructor = $this->instructorRepository->getById($query->lesson->instructorId);
+            $query->lessonMeetingPoint = $this->meetingPointRepository->getById($query->lesson->meetingPointId);
         }
 
         if (isset($data['instructor']) && $data['instructor'] instanceof Instructor) {

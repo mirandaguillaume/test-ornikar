@@ -17,9 +17,6 @@ use App\Service\QueryService;
 class TemplateManager
 {
     public function __construct(
-        private readonly LessonRepository $lessonRepository,
-        private readonly MeetingPointRepository $meetingPointRepository,
-        private readonly InstructorRepository $instructorRepository,
         private readonly LessonRenderer $lessonRenderer,
         private readonly QueryService $queryService,
     ) {
@@ -61,9 +58,6 @@ class TemplateManager
         ];
 
         if ($query->lesson) {
-            $meetingPoint = $this->meetingPointRepository->getById($query->lesson->meetingPointId);
-            $instructor = $this->instructorRepository->getById($query->lesson->instructorId);
-
             $toBeReplaced = array_merge($toBeReplaced, [
                 '[lesson:summary_html]',
                 '[lesson:summary]',
@@ -77,8 +71,8 @@ class TemplateManager
             $replacements = array_merge($replacements, [
                 $this->lessonRenderer->renderHtml($query->lesson),
                 $this->lessonRenderer->renderText($query->lesson),
-                $instructor->firstname,
-                $meetingPoint->name,
+                $query->lessonInstructor->firstname,
+                $query->lessonMeetingPoint->name,
                 $query->lesson->start_time->format('d/m/Y'),
                 $query->lesson->start_time->format('H:i'),
                 $query->lesson->end_time->format('H:i'),
