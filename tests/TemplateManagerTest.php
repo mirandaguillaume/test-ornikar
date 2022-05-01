@@ -12,6 +12,7 @@ use App\Repository\InstructorRepository;
 use App\Repository\LessonRepository;
 use App\Repository\MeetingPointRepository;
 use App\Service\LessonRenderer;
+use App\Service\QueryService;
 use App\TemplateManager;
 use PHPUnit\Framework\TestCase;
 
@@ -35,7 +36,6 @@ class TemplateManagerTest extends TestCase
         $this->instructorRepository = new InstructorRepository();
         $this->instructorRepository->save(new Instructor(1, "jean", "rock"));
 
-
         $this->meetingPointRepository = new MeetingPointRepository();
         $this->meetingPointRepository->save(new MeetingPoint(1, "http://lambda.to", "paris 5eme"));
 
@@ -45,6 +45,8 @@ class TemplateManagerTest extends TestCase
         $this->lessonRepository = new LessonRepository();
 
         $this->lessonRenderer = new LessonRenderer();
+
+        $this->queryService = new QueryService($this->applicationContext);
     }
 
     /**
@@ -83,11 +85,11 @@ L'équipe Ornikar
 "
         );
         $templateManager = new TemplateManager(
-            $this->applicationContext,
             $this->lessonRepository,
             $this->meetingPointRepository,
             $this->instructorRepository,
-            $this->lessonRenderer
+            $this->lessonRenderer,
+            $this->queryService,
         );
 
         $message = $templateManager->getTemplateComputed(
